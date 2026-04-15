@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teachable Machine</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- TensorFlow & Teachable Machine -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .card-custom {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .btn-camera {
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+
+        .btn-camera:hover {
+            transform: scale(1.05);
+        }
+
+        canvas {
+            border-radius: 15px;
+            margin-top: 15px;
+            width: 100%;
+            height: auto;
+        }
+
+        .progress {
+            height: 25px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container d-flex justify-content-center align-items-center">
+    <div class="col-lg-6 col-md-8 col-sm-12 text-center card-custom mt-5">
+
+        <h2 class="mb-4">Bruno Silva</h2>
+
+        <button class="btn btn-light btn-camera shadow" onclick="init()">
+            📷 Permitir Câmera
+        </button>
+
+        <div id="webcam-container" class="mt-4"></div>
+
+        <div id="label-container" class="mt-4"></div>
+
+    </div>
+</div>
+
+<script>
+    const URL = "https://teachablemachine.withgoogle.com/models/N4Qr-_yh-o/";
+
+    let model, webcam, labelContainer, maxPredictions;
+
+    async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        const flip = true;
+        webcam = new tmImage.Webcam(300, 300, flip);
+        await webcam.setup();
+        await webcam.play();
+        window.requestAnimationFrame(loop);
+
+        document.getElementById("webcam-container").innerHTML = "";
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+
+        labelContainer = document.getElementById("label-container");
+        labelContainer.innerHTML = "";
+
+        for (let i = 0; i < maxPredictions; i++) {
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("mb-3");
+
+            wrapper.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <span id="label-${i}">Classe</span>
+                    <span id="value-${i}">0%</span>
+                </div>
+                <div class="progress">
+                    <div id="bar-${i}" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                </div>
+            `;
+
+            labelContainer.appendChild(wrapper);
+        }
+    }
+
+    async function loop() {
+        webcam.update();
+        await predict();
+        window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+        const prediction = await model.predict(webcam.canvas);
+
+        for (let i = 0; i < maxPredictions; i++) {
+            const prob = (prediction[i].probability * 100).toFixed(1);
+
+            document.getElementById(`label-${i}`).innerText = prediction[i].className;
+            document.getElementById(`value-${i}`).innerText = prob + "%";
+            document.getElementById(`bar-${i}`).style.width = prob + "%";
+        }
+    }
+</script>
+
+</body>
+</html>
