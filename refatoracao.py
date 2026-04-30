@@ -2,9 +2,20 @@ from typing import Iterable, Tuple
 
 
 def calculate_statistics(values: Iterable[float]) -> Tuple[float, float, float, float]:
-    """Return the sum, average, maximum and minimum of the given numeric values."""
-    numbers = list(values)
-    if not numbers:
+    """
+    Calcula a soma, média, máximo e mínimo dos valores numéricos fornecidos.
+
+    Args:
+        values (Iterable[float]): Uma sequência iterável de valores numéricos.
+
+    Returns:
+        Tuple[float, float, float, float]: Uma tupla contendo a soma, média, máximo e mínimo, nessa ordem.
+
+    Raises:
+        ValueError: Se a lista de valores estiver vazia.
+    """
+    numbers = list(values)  # Converte iterável para lista para permitir múltiplas operações
+    if not numbers:  # Verifica se a lista está vazia para evitar divisão por zero
         raise ValueError("A lista de valores não pode estar vazia.")
 
     total = sum(numbers)
